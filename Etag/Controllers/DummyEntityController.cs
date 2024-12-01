@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Tryout.ETag.Delta.EFContext;
 
-namespace Tryout.ETag.Delta.Controllers
+namespace ETag.Delta
 {
     [ApiController]
     [Route("[controller]")]
@@ -13,7 +12,23 @@ namespace Tryout.ETag.Delta.Controllers
         [HttpGet(Name = "Get")]
         public async Task<IEnumerable<DummyEntity>> Get(CancellationToken cancellationToken)
         {
-            var result = await _context.Set<DummyEntity>().Where(p => p.UserEmail == "erdemozkara@hotmail.com.tr").ToListAsync(cancellationToken);
+            var result = await _context.Set<DummyEntity>()
+                .Include(e => e.Relations)  // iliþkileri dahil et
+                .Where(p => p.UserName == "User 50")
+                .Select(e => new DummyEntity
+                {
+                    UUID = e.UUID,
+                    UserName = e.UserName,
+                    UserEmail = e.UserEmail,
+                    Relations = e.Relations.Select(r => new DummyEntityRelation
+                    {
+                        UUID = r.UUID,
+                        UserName = r.UserName,
+                        UserEmail = r.UserEmail,
+                    }).ToList()
+                })
+                .ToListAsync(cancellationToken);
+
             return result;
         }
     }
