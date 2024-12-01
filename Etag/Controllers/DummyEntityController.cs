@@ -9,18 +9,43 @@ namespace ETag.Delta
     {
         private EF_Context _context = serviceProvider.GetRequiredService<EF_Context>();
 
-        [HttpGet(Name = "Get")]
-        public async Task<IEnumerable<DummyEntity>> Get(CancellationToken cancellationToken)
+        [HttpGet("Get")]
+        public async Task<IEnumerable<User>> Get(CancellationToken cancellationToken)
         {
-            var result = await _context.Set<DummyEntity>()
-                .Include(e => e.Relations)  // iliþkileri dahil et
+            var result = await _context.Set<User>()
+                .Include(e => e.UserContacts)  // iliþkileri dahil et
                 .Where(p => p.UserName == "User 50")
-                .Select(e => new DummyEntity
+                .Select(e => new User
                 {
                     UUID = e.UUID,
                     UserName = e.UserName,
                     UserEmail = e.UserEmail,
-                    Relations = e.Relations.Select(r => new DummyEntityRelation
+                    UserContacts = e.UserContacts.Select(r => new UserContact
+                    {
+                        UUID = r.UUID,
+                        UserName = r.UserName,
+                        UserEmail = r.UserEmail,
+                    }).ToList()
+                })
+                .ToListAsync(cancellationToken);
+
+            return result;
+        }
+
+        [HttpGet("SearchByUserName")]
+        public async Task<IEnumerable<User>> SearchByUserName(string keyword, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(keyword)) return Enumerable.Empty<User>();
+
+            var result = await _context.Set<User>()
+                .Include(e => e.UserContacts)
+                .Where(p => EF.Functions.Like(p.UserName, $"%{keyword}%"))
+                .Select(e => new User
+                {
+                    UUID = e.UUID,
+                    UserName = e.UserName,
+                    UserEmail = e.UserEmail,
+                    UserContacts = e.UserContacts.Select(r => new UserContact
                     {
                         UUID = r.UUID,
                         UserName = r.UserName,

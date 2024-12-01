@@ -27,11 +27,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<EF_Context>();
-    // Use this if you want to simply create the database if it does not exist:
+    //context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
-
-    // Use this if you want to apply migrations (recommended for production):
-    //context.Database.Migrate();
 }
 
 app.UseDelta();
