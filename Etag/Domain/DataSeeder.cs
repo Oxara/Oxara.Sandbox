@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using Microsoft.EntityFrameworkCore;
 namespace ETag.Delta;
+
 public static partial class DataSeeder
 {
     public static void Seed(ModelBuilder modelBuilder)
@@ -15,9 +16,9 @@ public static partial class DataSeeder
             .RuleFor(u => u.LastName, f => f.Name.LastName())
             .RuleFor(u => u.UserName, (f, u) => $"{u.FirstName.ToLower()}.{u.LastName.ToLower()}")
             .RuleFor(u => u.UserEmail, (f, u) => $"{u.FirstName.ToLower()}.{u.LastName.ToLower()}@{f.PickRandom(domains)}")
-            .RuleFor(u => u.Birthday, f => f.Date.Past(30)); // Son 30 yıl içinde doğum tarihi
+            .RuleFor(u => u.Birthday, f => DateOnly.FromDateTime(f.Date.Past(30))); // Son 30 yıl içinde doğum tarihi
 
-        var users = userFaker.Generate(10000);
+        var users = userFaker.Generate(1000);
 
         // UserContact için Faker
         var userContactFaker = new Faker<UserContact>()
@@ -28,11 +29,10 @@ public static partial class DataSeeder
             .RuleFor(uc => uc.UserEmail, (f, uc) => $"{uc.FirstName.ToLower()}.{uc.LastName.ToLower()}@{f.PickRandom(domains)}")
             .RuleFor(uc => uc.UserUUID, f => f.PickRandom(users).UUID);
 
-        var userContacts = userContactFaker.Generate(50000); // Her kullanıcı için 5 ilişki
+        var userContacts = userContactFaker.Generate(5000); // Her kullanıcı için 5 ilişki
 
         // ModelBuilder kullanarak verileri ekle
         modelBuilder.Entity<User>().HasData(users);
         modelBuilder.Entity<UserContact>().HasData(userContacts);
     }
 }
-
